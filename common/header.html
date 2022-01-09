@@ -1,5 +1,5 @@
 <script type="text/discourse-plugin" version="0.1">
-  const minimumOffset = require("discourse/lib/offset-calculator").minimumOffset;
+  const headerOffset = require("discourse/lib/offset-calculator").headerOffset;
   const { iconHTML } = require("discourse-common/lib/icon-library");
   const { run } = Ember;
 
@@ -137,7 +137,11 @@
             self.triggerShowHide(elem);
           }
 
-          self.scrollTo($(this));
+          const target = document.querySelector(`[data-d-toc="${this.getAttribute("data-d-toc")}"]`);
+          window.scrollTo({
+            behavior: "smooth",
+            top: `${target.getBoundingClientRect().top + window.scrollY - headerOffset() - 10}`
+          });
         });
 
         $("#main").on(
@@ -157,7 +161,6 @@
         $("html, body")
           .promise()
           .done(function () {
-            const winScrollTop = $(window).scrollTop();
             const anchors = $(self.options.cooked).find("[data-d-toc]");
 
             let closestAnchorDistance = null;
@@ -165,7 +168,7 @@
 
             anchors.each(function (idx) {
               const distance = Math.abs(
-                $(this).offset().top - minimumOffset() - winScrollTop
+                $(this).offset().top - headerOffset() - window.scrollY
               );
               if (
                 closestAnchorDistance == null ||
@@ -217,19 +220,6 @@
 
       show: function (elem) {
         return elem.slideDown(TOC_ANIMATION_SPEED);
-      },
-
-      scrollTo: function (elem) {
-        const currentDiv = $(`[data-d-toc="${elem.attr("data-d-toc")}"]`);
-
-        $("html, body").animate(
-          {
-            scrollTop: `${currentDiv.offset().top - minimumOffset()}`
-          },
-          {
-            duration: SMOOTH_SCROLL_SPEED
-          }
-        );
       },
 
       setOptions: () => {
